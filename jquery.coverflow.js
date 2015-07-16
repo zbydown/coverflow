@@ -45,6 +45,7 @@
 			enableKeyboard:		true,
 			enableClick:		true,
 			enableWheel:		true,
+			antiScrollInterfere:true,
 			index:				0,
 			innerAngle:			-75,
 			innerCss:			undefined,
@@ -64,26 +65,31 @@
 
 		_window_handler_resize:		null,
 		_window_handler_keydown:	null,
+		_init_wheel : false ,
+		_current_enable_wheel : false ,
 
 		_create: function() {
 			var that = this,
 				covers = that._getCovers(),
-				images = covers.filter('img').add('img', covers).filter(function() {
+				images = covers.filter('img').add('img', covers).filter(function () {
 					return !(this.complete || this.height > 0);
 				}),
 				maxHeight = covers.height(),
 				height;
 
 			// Internal event prefix
-			that.widgetEventPrefix	= 'vanderlee-coverflow';
+			that.widgetEventPrefix = 'vanderlee-coverflow';
 
-			that.hovering			= false;
-			that.pagesize			= 1;
-			that.currentIndex		= that.options.index;
-			
+			that.hovering = false;
+			that.pagesize = 1;
+			that.currentIndex = that.options.index;
+
+			//Check if Mousewheel should activate immediately
+			that.options.antiScrollInterfere === true ? that._init_wheel = false : that._init_wheel = true;
+
 			// Fix height
 			that.element.height(maxHeight);
-			images.load(function() {
+			images.load(function () {
 				height = that._getCovers().height();
 				if (height > maxHeight) {
 					maxHeight = height;
@@ -95,7 +101,7 @@
 			covers.hide();
 
 			// Enable click-jump
-			that.element.on('mousedown tap', '> *', function(event) {
+			that.element.on('mousedown tap', '> *', function (event) {
 				if (that.options.enableClick) {
 					var index = that._getCovers().index(this);
 					if (index === that.currentIndex) {
@@ -107,14 +113,39 @@
 			});
 
 			// Mousewheel
-			that.element.on(wheelEvents, function(event) {
-				if (that.options.enableWheel) {
+			var wheelHandler = function (event) {
 					var delta = getWheel(event) > 0 ? 1 : -1;
 
 					event.preventDefault();
 					that._setIndex(that.options.index - delta, true);
+			}
+			var _enableWheel = function(){
+				if(that._current_enable_wheel == false) {
+					that.element.on(wheelEvents, wheelHandler);
+					that._current_enable_wheel = true;
 				}
-			});
+			}
+			var _disableWheel = function(){
+				if(that._current_enable_wheel == true) {
+					that.element.off(wheelEvents, wheelHandler);
+					that._current_enable_wheel = false;
+				}
+			}
+			if (that._init_wheel && that.options.enableWheel) {
+				_enableWheel();
+			}
+			var timer = null;
+			if (that.options.enableWheel && that.options.antiScrollInterfere){
+				$(window).on('scroll', function (e) {
+					if(timer !== null) {
+						clearTimeout(timer);
+					}
+					if(that._current_enable_wheel == true) {
+						_disableWheel();
+					}
+					timer = setTimeout(_enableWheel,400);
+				})
+			}
 
 			// Swipe
 			if ($.isFunction(that.element.swipe)) {
