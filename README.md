@@ -74,7 +74,7 @@ current (or "selected") cover. The inner cover are the ones closest to the
 selected cover on either side. Outer covers are the ones at the very edges of
 the visible field. There may be covers beyond the outer covers, but they will
 not be visible.
-
+ 
 Options
 -------
 ### **density** (function, default: `1`)
@@ -98,6 +98,10 @@ enabled/disabled using the `option` and `options` method.
 
 ### **enableWheel** (boolean, default: `true`)
 Set to false to disable mouse wheel interaction. Can be enabled/disabled using 
+the `option` and `options` method.
+
+### **antiScrollInterfere** (boolean, default: `true`)
+To avoid scroll and mousewheel interfering each other. Can be enabled/disabled using 
 the `option` and `options` method.
 
 ### **index** (string, integer: `0`)
